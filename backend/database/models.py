@@ -17,11 +17,18 @@ class AccessRole(str, Enum):
     FINANCE = "Finance"
     ADMINISTRATOR = "Administrator"
 
+class SourceType(str, Enum):
+    DOCUMENT_PDF = "PDF Document"
+    CHAT_RECORD = "Slack/Teams Chat Log"
+    MEETING_TRANSCRIPT = "Meeting Transcript"
+    EMAIL_RECORD = "Email Record"
+
 class Document(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str = Field(index=True)
     department: str
     owner_id: int
+    source_type: str = Field(default="PDF Document")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     versions: List["DocumentVersion"] = Relationship(back_populates="document")
@@ -38,6 +45,7 @@ class DocumentVersion(SQLModel, table=True):
     approved_at: Optional[datetime] = None
     allowed_roles: str # Comma separated list of roles
     source_file: str
+    source_type: str = Field(default="PDF Document")
     page_number: int
     section: str
     is_archived: bool = Field(default=False)

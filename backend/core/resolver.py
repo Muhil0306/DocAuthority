@@ -103,6 +103,7 @@ def resolve_authoritative_version(query: str, user_role: str, session: Session) 
         "has_conflict": has_conflict,
         "citation": {
             "source_file": top_result["version"].source_file,
+            "source_type": getattr(top_result["version"], "source_type", getattr(doc, "source_type", "PDF Document")),
             "page": top_result["version"].page_number,
             "section": top_result["version"].section
         },
