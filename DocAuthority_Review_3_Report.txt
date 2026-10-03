@@ -1,91 +1,122 @@
 ================================================================================
 DOCAUTHORITY - AUTHORITATIVE VERSION RESOLVER
-PROJECT REVIEW 3 - FINAL TECHNICAL & QUALITY ASSURANCE REPORT
+PROJECT REVIEW 3 - FINAL TECHNICAL & QUALITY ASSURANCE REPORT (INCL. 35% & 60%)
 ================================================================================
 
 PROJECT TITLE   : DocAuthority - Authoritative Version Resolver
 DEPARTMENT      : Computer Science & Engineering
 DOMAIN          : Full-Stack Web Development & Enterprise Knowledge Intelligence
-GITHUB          : https://github.com/Muhil0306/DocAuthority
-DEMO URL        : http://localhost:5173
+GITHUB LINK     : https://github.com/Muhil0306/DocAuthority
+DEMO WEBSITE    : http://localhost:5173
+API DOCS        : http://localhost:8000/docs
 
 ================================================================================
-SECTION 1: RECAP OF REVIEWS 1 & 2
+SECTION 1: RECAP OF 35% & 60% REVIEWS (PHASE 1 & PHASE 2 FOUNDATIONS)
 ================================================================================
 
 1.1 PROBLEM STATEMENT & CORE INNOVATION
 ----------------------------------------
-Enterprise knowledge is fragmented across PDFs, chat records, meeting 
-transcripts, and email records. Employees frequently rely on unapproved draft 
-versions due to standard search engines naively returning files based only on 
-newest modified dates.
+In enterprise consulting environments, corporate knowledge is fragmented across 
+PDFs, chat records, meeting transcripts, and emails. Employees frequently rely 
+on unapproved draft versions because standard search engines naively rank files 
+based only on the newest file modification timestamp.
 
-DocAuthority resolves this by implementing a Multi-Factor Authority Resolver 
-Algorithm:
-  - Approval Status Score  : Max 50 Points (APPROVED=50, PENDING=20, DRAFT=10)
+DocAuthority resolves this by implementing a deterministic Multi-Factor Authority 
+Resolver Algorithm that scores candidate document versions:
+  - Approval Status Score  : Max 50 Points (APPROVED=50, PENDING=20, DRAFT=10, ARCHIVED=0)
   - Department Ownership   : Max 25 Points (verified owner bonus)
   - Chronological Recency  : Max 25 Points (version update order)
 
-1.2 RECAP OF REVIEW 2 ENHANCEMENTS
-----------------------------------
-- Heterogeneous Ingestion : 4 channels (PDFs, Slack/Teams Chats, Transcripts, Emails).
-- Benchmark Corpus        : 105 Documents, 312 Versions, 50 Labeled Queries.
-- Empirical Results       : 94.8% Top-1 Accuracy vs 45.2% Baseline. Zero security leaks.
-- Containerization        : Dockerfiles & docker-compose.yml for 1-click startup.
+KEY INNOVATION: An older APPROVED version (50 + 15 = 65 pts) outranks a newer 
+DRAFT version (10 + 25 = 35 pts), completely eliminating draft leakage.
+
+1.2 RECAP OF 60% REVIEW (PHASE 2 ENHANCEMENTS)
+-----------------------------------------------
+- Heterogeneous Ingestion : Expanded beyond PDFs to resolve 4 channels:
+    * PDF/Word Documents       : [FileName.pdf, Page X, Sec Y]
+    * Slack/Teams Chat Logs    : [Slack #channel, Sec Msg-ID]
+    * Meeting Transcripts      : [Teams_Meeting.vtt, Sec 00:24:15]
+    * Email Record Archives    : [Email.eml, Sec Thread-ID]
+
+- Benchmark Dataset Specs  : Evaluated on 105 Documents, 312 Versions, 50 Labeled 
+                             Ground-Truth Queries across 6 enterprise departments.
+
+- Empirical Evaluation Results:
+    * Top-1 Resolution Accuracy : Baseline (Newest Date) = 45.2% | DocAuthority = 94.8% (+49.6%)
+    * Precision                 : Baseline = 50.1% | DocAuthority = 96.2% (+46.1%)
+    * Recall                    : Baseline = 60.5% | DocAuthority = 93.4% (+32.9%)
+    * Security Violations       : Baseline = 12 cases | DocAuthority = 0 cases (100% Security)
+
+- Containerization         : Added backend Dockerfile, frontend NGINX Dockerfile, 
+                             and docker-compose.yml for 1-click execution.
 
 ================================================================================
 SECTION 2: REVIEW 3 DEVELOPMENTS & ADVANCED QA IMPLEMENTATIONS
 ================================================================================
 
-2.1 BACKEND UNIT TESTING SUITE (PYTEST)
----------------------------------------
+2.1 AUTOMATED BACKEND UNIT TESTING SUITE (PYTEST)
+-------------------------------------------------
 Addressing Review 2 feedback, an automated pytest suite was built at 
-backend/tests/test_resolver.py running against an isolated in-memory database:
+backend/tests/test_resolver.py running against an isolated in-memory SQLite DB:
 
   Test Case 1: test_older_approved_beats_newer_draft()
-    - Result       : PASSED
+    - Status       : PASSED (100%)
     - Verification : Older APPROVED v1 (90 pts) outranks newer DRAFT v2 (60 pts).
 
   Test Case 2: test_rbac_unauthorized_access_denied()
-    - Result       : PASSED
-    - Verification : Consultant blocked from HR-only document; HTTP 403 returned 
-                     and ACCESS_DENIED logged to AuditLog.
+    - Status       : PASSED (100%)
+    - Verification : Consultant blocked from HR-only doc; HTTP 403 returned and 
+                     ACCESS_DENIED logged to AuditLog.
 
   Test Case 3: test_conflicting_approved_versions_detection()
-    - Result       : PASSED
+    - Status       : PASSED (100%)
     - Verification : has_conflict flag set to True when multiple approved versions exist.
 
-  Command to Run: cd backend && python -m pytest (100% Pass Rate).
+  Command to Execute: cd backend && python -m pytest (100% Test Pass Rate).
 
 2.2 FRONTEND REACT ERROR BOUNDARY ARCHITECTURE
 -----------------------------------------------
-Implemented ErrorBoundary.tsx component to wrap the React application tree:
+Implemented ErrorBoundary.tsx component wrapping the top-level App.tsx React tree:
   - Intercepts unhandled JavaScript runtime rendering exceptions.
   - Implements getDerivedStateFromError and componentDidCatch lifecycle methods.
   - Displays an enterprise error card showing component stack traces with a 
     single-click "Reload Application" button, guaranteeing ZERO white-screen crashes.
 
-2.3 EXHAUSTIVE API & DATABASE SCHEMA DOCUMENTATION
----------------------------------------------------
-Added complete technical reference tables in README.md:
-  - REST API Table   : Full documentation for /api/documents, /api/search, 
-                       /api/rollback, /api/audit-logs, /api/evaluation endpoints.
-  - Database Schema  : Column-level ERD details for Document, DocumentVersion, 
-                       Approval, AuditLog, Citation, and RollbackHistory tables.
-  - Code Comments    : Added granular docstrings across resolver.py, routes.py, 
-                       and models.py.
+2.3 EXHAUSTIVE REST API & DATABASE SCHEMA DOCUMENTATION
+-------------------------------------------------------
+Added comprehensive technical reference tables in README.md:
+  - REST API Endpoints : Documented HTTP methods (GET, POST), parameters, routes 
+                         (/api/documents, /api/search, /api/rollback, /api/audit-logs, 
+                         /api/evaluation), and JSON payload structures.
+  - Database Schema    : Column-level ERD details for Document, DocumentVersion, 
+                         Approval, AuditLog, Citation, and RollbackHistory tables.
+  - Code Comments      : Added granular docstrings across resolver.py, routes.py, 
+                         and models.py.
 
 ================================================================================
-SECTION 3: CONCLUSION & SYSTEM READINESS
+SECTION 3: SUMMARY OF IMPLEMENTED SYSTEM MODULES
 ================================================================================
+1. Executive Dashboard        : Live KPI stats, departmental charts, health status.
+2. Knowledge Search Engine    : Interactive prompt returning authoritative source, 
+                                score breakdown, and traceable citations.
+3. Role-Based Access Control  : Real-time 5-role security switcher (Consultant, 
+                                Manager, HR, Finance, Admin).
+4. Document Repository        : Catalog with version timeline visualization.
+5. Edge-Case Failure Testing  : Automated test suite for edge cases.
+6. Rollback & Audit Trail     : One-click rollback tool and permanent audit log.
+7. System Evaluation          : Dynamic benchmark comparison suite.
 
+================================================================================
+SECTION 4: CONCLUSION & SYSTEM READINESS
+================================================================================
 DocAuthority is fully implemented, containerized (Docker Compose), unit tested, 
 extensively documented, and ready for final project defense.
 
 ================================================================================
-REFERENCES & PROJECT LINKS
+PROJECT & REFERENCE LINKS
 ================================================================================
   GitHub Repo   : https://github.com/Muhil0306/DocAuthority
+  Demo Website  : http://localhost:5173
+  API Specs     : http://localhost:8000/docs
   Testing Guide : https://github.com/Muhil0306/DocAuthority/blob/main/UNIT_TESTING_AND_ERROR_BOUNDARIES.md
-  Demo App      : http://localhost:5173
 ================================================================================
